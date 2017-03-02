@@ -18,7 +18,7 @@ npm install es6-api-controller --save
 // controllers/base.controller.server.js
 'use strict';
 
-const BaseController = require('api-controller').BaseController; // eslint-disable-line
+const BaseController = require('es6-api-controller').BaseController; // eslint-disable-line
 
 const user = require('./users.auth.controller.server');
 
@@ -45,7 +45,12 @@ module.exports = MyBaseController;
 const BaseController = require('./base.controller.server');
 
 class UsersController extends BaseController {
-  ...
+
+}
+
+const usersController = new UsersController(require('mongoose').model('User'));
+
+module.exports = usersController;
 ```
 
 3. setup your routes in the following way
