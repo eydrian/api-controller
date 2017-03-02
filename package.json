@@ -1,6 +1,6 @@
 {
   "name": "es6-api-controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a nodejs api controller",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,14 @@
   ],
   "author": "Adrian Etter",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/eydrian/api-controller.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eydrian/api-controller/issues"
+  },
+  "homepage": "https://github.com/eydrian/api-controller#readme",
   "dependencies": {
     "mongoose": "^4.8.5"
   },
