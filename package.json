@@ -1,5 +1,5 @@
 {
-  "name": "api-controller",
+  "name": "es6-api-controller",
   "version": "1.0.0",
   "description": "a nodejs api controller",
   "main": "index.js",

@@ -6,7 +6,7 @@ this is work in progress
 
 ### to install
 ```
-npm install api-controller --save
+npm install es6-api-controller --save
 
 ```
 
