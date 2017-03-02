@@ -1,0 +1,6 @@
+{
+  "extends": "eslint-config-econ/backend-node",
+  "rules": {
+    "node/no-unpublished-require": ["off"]
+  }
+}
