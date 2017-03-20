@@ -15,6 +15,8 @@ class BaseController extends ApiController {
   }
   index(req, res, next) {
     let query = {};
+    req.query.limit = parseInt(req.query.limit) || 100;
+    req.query.offset = parseInt(req.query.offset) || 0;
     if (req.query.sort) req.query.sort = this.parseSort(req.query.sort);
     if (req.query.offset) req.query.offset = parseInt(req.query.offset);
     if (req.query.filter) req.query = this.parseFilter(req.query);
@@ -144,6 +146,9 @@ class BaseController extends ApiController {
   parseSort(sort) {
     try {
       sort = JSON.parse(sort);
+      Object.keys(sort).forEach((key) => {
+        sort[key] = parseInt(sort[key]);
+      });
     } catch (e) {
       /* istanbul ignore next */
       if (e.name === 'SyntaxError') {
