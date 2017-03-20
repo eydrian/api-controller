@@ -1,6 +1,9 @@
 {
   "name": "es6-api-controller",
   "version": "1.0.1",
+  "engines": {
+    "node": ">=6.9.0"
+  },
   "description": "a nodejs api controller",
   "main": "index.js",
   "scripts": {
