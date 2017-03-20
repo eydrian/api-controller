@@ -73,7 +73,8 @@ class ApiController {
         req.meta = {
           total: total,
           count: req.data ? req.data.length : /* istanbul ignore next */ null,
-          offset: req.query.offset || 0,
+          offset: req.query.offset,
+          limit: req.query.limit
         };
 
         return next();
