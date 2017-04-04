@@ -134,14 +134,32 @@ class BaseController extends ApiController {
     });
   }
   statsResponse(req, res, next) {
-    this.model.count((err, result) => {
-      if (err) return this.respondServerError(res, err);
-      else {
-        if (typeof req.stats !== 'object') req.stats = {};
+    if (typeof req.stats !== 'object') req.stats = {};
 
-        return res.status(200).json(req.stats);
+    return res.status(200).json(req.stats);
+  }
+  statistics(req, res, next) {
+    if (typeof this.model.statistics === 'function') {
+      const query = req.dateRange || {};
+      this.model.statistics(query, (err, result) => {
+        if (err) return this.respondServerError(res, err);
+        else {
+          if (typeof req.stats !== 'object') req.stats = {};
+          req.stats[this.model.collection.name] = result;
+
+          return next();
+        }
+      });
+    } else return this.stats(req, res, next);
+  }
+  parseDateRange(req, res, next, id, urlParam) {
+    if (req.params.year) {
+      if (req.params.month) {
+        // TODO:  set query
       }
-    });
+    }
+
+    return next();
   }
   parseSort(sort) {
     try {
