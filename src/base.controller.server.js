@@ -135,8 +135,7 @@ class BaseController extends ApiController {
   }
   statsResponse(req, res, next) {
     if (typeof req.stats !== 'object') req.stats = {};
-
-    return res.status(200).json(req.stats);
+    else return res.status(200).json(req.stats);
   }
   statistics(req, res, next) {
     if (typeof this.model.statistics === 'function') {
