@@ -159,9 +159,9 @@ class BaseController extends ApiController {
     if (!isNaN(year)) {
       if (isNaN(month)) month = 0;
       else {
+        month = Math.max(Math.min(month, 12), 1);
         toMonth = --month + 1;
       }
-      month = Math.max(Math.min(month, 11), 0);
       let from = new Date();
       from = new Date(from.setFullYear(year, month, 1));
       from = new Date(from.setHours(0, 0, 0 , 0));
