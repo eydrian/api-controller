@@ -168,6 +168,12 @@ class BaseController extends ApiController {
       let to = new Date(from);
       to = new Date(to.setFullYear(year, toMonth, 1));
 
+      if (typeof req.stats !== 'object') req.stats = {};
+      req.stats.range = {
+        from: from,
+        to: to
+      };
+
       req.dateRange = { $and: [{ date: { $gte: from }}, { date: { $lt: to }}]};
     }
 
