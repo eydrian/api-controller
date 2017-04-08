@@ -153,10 +153,23 @@ class BaseController extends ApiController {
     } else return this.stats(req, res, next);
   }
   parseDateRange(req, res, next, id, urlParam) {
-    if (req.params.year) {
-      if (req.params.month) {
-        // TODO:  set query
+    // FIXME: this function is called twice for /year/month ....
+    const year = parseInt(req.params.year);
+    let month = parseInt(req.params.month);
+    let toMonth = 12;
+    if (!isNaN(year)) {
+      if (isNaN(month)) month = 0;
+      else {
+        toMonth = --month + 1;
       }
+      month = Math.max(Math.min(month, 11), 0);
+      let from = new Date();
+      from = new Date(from.setFullYear(year, month, 1));
+      from = new Date(from.setHours(0, 0, 0 , 0));
+      let to = new Date(from);
+      to = new Date(to.setFullYear(year, toMonth, 1));
+
+      req.dateRange = { $and: [{ date: { $gte: from }}, { date: { $lt: to }}]};
     }
 
     return next();
