@@ -48,6 +48,8 @@ class BaseController extends ApiController {
     return res.jsonp(req.model.toObject());
   }
   create(req, res, next) {
+    delete req.body._id;
+    
     const Model = this.model;
     const model = new Model(req.body);
     model.timestamps = {
