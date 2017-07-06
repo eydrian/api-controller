@@ -1,6 +1,6 @@
 {
   "name": "es6-api-controller",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "engines": {
     "node": ">=6.9.0"
   },
@@ -23,11 +23,13 @@
     "url": "https://github.com/eydrian/api-controller/issues"
   },
   "homepage": "https://github.com/eydrian/api-controller#readme",
-  "dependencies": {
-    "mongoose": "^4.8.5"
+  "peerDependencies": {
+    "mongoose": "^4.10.7"
   },
   "devDependencies": {
     "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git"
+  },
+  "dependencies": {
+    "mongoose": "^4.11.1"
   }
-
 }
