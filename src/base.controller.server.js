@@ -49,6 +49,7 @@ class BaseController extends ApiController {
   }
   create(req, res, next) {
     delete req.body._id;
+    delete req.body.timestamps;
     
     const Model = this.model;
     const model = new Model(req.body);
@@ -63,7 +64,9 @@ class BaseController extends ApiController {
     });
   }
   update(req, res, next) {
+    delete req.body.timestamps;
     const model = req.model;
+    
     Object.keys(req.body).forEach((key) => {
       model[key] = req.body[key];
     });
