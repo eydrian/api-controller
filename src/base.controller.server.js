@@ -64,6 +64,7 @@ class BaseController extends ApiController {
     });
   }
   update(req, res, next) {
+    if (req.body._id === null) delete req.body._id;
     delete req.body.timestamps;
     const model = req.model;
     
