@@ -15,10 +15,9 @@ class BaseController extends ApiController {
   }
   index(req, res, next) {
     let query = {};
-    req.query.limit = parseInt(req.query.limit) || 100;
-    req.query.offset = parseInt(req.query.offset) || 0;
+    req.query.offset = this.parsePagination(req.query.offset, 0);
+    req.query.limit = this.parsePagination(req.query.limit, 1000);
     if (req.query.sort) req.query.sort = this.parseSort(req.query.sort);
-    if (req.query.offset) req.query.offset = parseInt(req.query.offset);
     if (req.query.filter) req.query = this.parseFilter(req.query);
 
     /* istanbul ignore else */
@@ -218,6 +217,12 @@ class BaseController extends ApiController {
     });
 
     return query;
+  }
+
+  parsePagination(field, extrema) {
+    const value = parseInt(field);
+
+    return isNaN(value) ? extrema : value;
   }
 
 }
