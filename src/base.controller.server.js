@@ -16,7 +16,7 @@ class BaseController extends ApiController {
   index(req, res, next) {
     let query = {};
     req.query.offset = this.parsePagination(req.query.offset, 0);
-    req.query.limit = this.parsePagination(req.query.limit, 1000);
+    req.query.limit = this.parsePagination(req.query.limit, 100);
     if (req.query.sort) req.query.sort = this.parseSort(req.query.sort);
     if (req.query.filter) req.query = this.parseFilter(req.query);
 
