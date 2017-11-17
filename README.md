@@ -7,14 +7,12 @@ this is work in progress
 ### to install
 ```
 npm install es6-api-controller --save
-
 ```
-
 ### usage example
 
 1. include your own isAuthenticated and hasAuthorization hooks
 
-```
+```js
 // controllers/base.controller.server.js
 'use strict';
 
@@ -38,7 +36,7 @@ module.exports = MyBaseController;
 
 2. Inherit MyBaseController in all your express controllers
 
-```
+```js
 // controllers/users.controller.server.js
 'use strict';
 
@@ -55,7 +53,7 @@ module.exports = usersController;
 
 3. setup your routes in the following way
 
-```
+```js
 'use strict';
 
 const router = require('express').Router();
