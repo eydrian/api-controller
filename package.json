@@ -17,7 +17,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/eydrian/api-controller.git"
+    "url": "https://github.com/eydrian/api-controller"
   },
   "bugs": {
     "url": "https://github.com/eydrian/api-controller/issues"
