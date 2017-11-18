@@ -30,6 +30,6 @@
     "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git"
   },
   "dependencies": {
-    "mongoose": "^4.11.1"
+    "mongoose": "^4.13.4"
   }
 }
