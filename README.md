@@ -94,3 +94,9 @@ router.route('/users/:userId')
 router.param('userId', users.findById.bind(users));
 module.exports = router;
 ```
+
+### Post man queries:
+
+```
+?select=data date&sort={"date":1}
+```
