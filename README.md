@@ -5,9 +5,11 @@
 this is work in progress
 
 ### to install
+
 ```
 npm install es6-api-controller --save
 ```
+
 ### usage example
 
 1. include your own isAuthenticated and hasAuthorization hooks
@@ -93,4 +95,68 @@ router.route('/users/:userId')
 
 router.param('userId', users.findById.bind(users));
 module.exports = router;
+```
+
+### use aggregation pipeline
+
+The `index` method of `BaseController` now supports MongoDB aggregation pipeline. To make
+use of it define an `aggregationPipeline(query)` function in the corresponding model and return
+the desired aggregation pipeline.
+
+Example excerpt from Payment model:
+
+```javascript
+const lookups = [{
+  from: 'subjects',
+  localField: 'subject',
+  foreignField: '_id',
+  as: 'subject'
+}, {
+  from: 'accesscodes',
+  localField: 'accessCode',
+  foreignField: '_id',
+  as: 'accessCode'
+}, {
+  from: 'treatments',
+  localField: 'treatment',
+  foreignField: '_id',
+  as: 'treatment'
+}];
+
+PaymentSchema.statics.aggregationPipeline = query => {
+  const pipeline = [];
+
+  if (!query.deleted) pipeline.push({ $match: { $and: [{ 'mark.deleted': { $ne: true }}]}});
+  if (query.subject) pipeline.push({ $match: { subject: query.subject }});
+  if (query.accessCode) pipeline.push({ $match: { accessCode: query.subject }});
+  if (query.subjects) pipeline.push({ $match: { subject: { $in: query.subjects }}});
+  if (query.project) pipeline.push({ $match: { subject: { $in: query.projectsubjects }}});
+
+  pipeline.push({ $sort: query.sort || { 'timestamps.updated.at': 1 } });
+  if (typeof query.offset !== 'undefined') pipeline.push({ $skip: query.offset });
+  if (query.limit > 0) {
+    pipeline.push({ $limit: typeof query.limit === 'undefined' ? 100 : query.limit });
+  }
+
+  if (Array.isArray(lookups)) {
+    lookups.forEach(lookup => {
+      pipeline.push({ $lookup: lookup });
+      pipeline.push({ $unwind: `$${ lookup.as }` });
+    });
+  }
+
+  if (typeof query.select !== 'undefined') {
+    const project = {};
+    if (Array.isArray(query.select)) {
+      query.select.forEach(entry => {
+        project[entry] = 1;
+      });
+    } else project[query.select] = 1;
+
+    pipeline.push({ $project: project });
+  }
+
+  return pipeline;
+};
+
 ```
