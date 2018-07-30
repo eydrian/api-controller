@@ -13,43 +13,58 @@ class BaseController extends ApiController {
     super(model);
     this.filters = ['type', 'deleted'];
   }
+
   index(req, res, next) {
-    let query = {};
     req.query.offset = this.parsePagination(req.query.offset, 0);
     req.query.limit = this.parsePagination(req.query.limit, 100);
     if (req.query.sort) req.query.sort = this.parseSort(req.query.sort);
     if (req.query.filter) req.query = this.parseFilter(req.query);
 
-    /* istanbul ignore else */
-    if (typeof this.model.parseQuery === 'function') {
-      query = this.model.parseQuery(req.query);
-    }
+    if (typeof this.model.aggregationPipeline === 'function') {
+      return this.model.aggregate(this.model.aggregationPipeline(req.query)).exec(
+        (err, models) => {
+          /* istanbul ignore if */
+          if (err) return next(err, null);
+          else {
+            req.data = models;
 
-    if (!query.populate || !Array.isArray(query.populate)) query.populate = [];
-
-    return this.model.find(query.q)
-      .limit(query.limit)
-      .skip(query.offset)
-      .sort(query.sort)
-      .select(query.select)
-      .populate(query.populate)
-      .exec((err, models) => {
-        /* istanbul ignore if */
-        if (err) return next(err, null);
-        else {
-          req.data = models;
-
-          return next();
+            return next();
+          }
         }
-      });
+      );
+    } else {
+      let query = {};
+      if (typeof this.model.parseQuery === 'function') {
+        query = this.model.parseQuery(req.query);
+      }
+
+      if (!query.populate || !Array.isArray(query.populate)) query.populate = [];
+
+      return this.model.find(query.q)
+        .limit(query.limit)
+        .skip(query.offset)
+        .sort(query.sort)
+        .select(query.select)
+        .populate(query.populate)
+        .exec((err, models) => {
+          /* istanbul ignore if */
+          if (err) return next(err, null);
+          else {
+            req.data = models;
+
+            return next();
+          }
+        });
+    }
   }
+
   read(req, res, next) {
     return res.jsonp(req.model.toObject());
   }
   create(req, res, next) {
     delete req.body._id;
     delete req.body.timestamps;
-    
+
     const Model = this.model;
     const model = new Model(req.body);
     model.timestamps = {
@@ -66,7 +81,7 @@ class BaseController extends ApiController {
     if (req.body._id === null) delete req.body._id;
     delete req.body.timestamps;
     const model = req.model;
-    
+
     Object.keys(req.body).forEach((key) => {
       model[key] = req.body[key];
     });
