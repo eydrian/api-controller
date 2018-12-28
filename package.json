@@ -24,12 +24,12 @@
   },
   "homepage": "https://github.com/eydrian/api-controller#readme",
   "peerDependencies": {
-    "mongoose": "^4.10.7"
+    "mongoose": "^5.0.0"
   },
   "devDependencies": {
     "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git"
   },
   "dependencies": {
-    "mongoose": "^4.13.4"
+    "mongoose": "^5.4.1"
   }
 }
