@@ -49,7 +49,7 @@ class BaseController extends ApiController {
   create(req, res, next) {
     delete req.body._id;
     delete req.body.timestamps;
-    
+
     const Model = this.model;
     const model = new Model(req.body);
     model.timestamps = {
@@ -66,7 +66,7 @@ class BaseController extends ApiController {
     if (req.body._id === null) delete req.body._id;
     delete req.body.timestamps;
     const model = req.model;
-    
+
     Object.keys(req.body).forEach((key) => {
       model[key] = req.body[key];
     });
@@ -128,7 +128,7 @@ class BaseController extends ApiController {
     } else return this.respondInvalidId(res);
   }
   stats(req, res, next) {
-    this.model.count((err, result) => {
+    this.model.countDocuments((err, result) => {
       if (err) return this.respondServerError(res, err);
       else {
         if (typeof req.stats !== 'object') req.stats = {};
@@ -219,10 +219,10 @@ class BaseController extends ApiController {
     return query;
   }
 
-  parsePagination(field, extrema) {
+  parsePagination(field, boundary) {
     const value = parseInt(field);
 
-    return isNaN(value) ? extrema : value;
+    return isNaN(value) ? boundary : value;
   }
 
 }
