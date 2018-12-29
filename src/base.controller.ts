@@ -8,6 +8,7 @@ import {
 import ApiController from './api.controller';
 import { IApiQuery } from './types/IApiQuery';
 import { isString, toNumber } from './helpers';
+import { IApiDocument } from './types/IApiModel';
 
 
 const isValidId = Types.ObjectId.isValid;
@@ -55,8 +56,14 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
         }
       });
   }
-  read(req: IApiRequest, res: Response, _next: NextFunction) {
-    return res.jsonp(req.model.toObject());
+  read(
+    req: IApiRequest,
+    res: Response,
+    _next: NextFunction
+  ) {
+    const response = req.model ? req.model.toObject() : {};
+
+    return res.jsonp(response);
   }
   create(req: IApiRequest, res: Response, next: NextFunction) {
     delete req.body._id;
@@ -77,60 +84,89 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       }
     });
   }
-  update(req: IApiRequest, res: Response, next: NextFunction) {
-    if (req.body._id === null) { delete req.body._id; }
+  update(
+    req: IApiRequest,
+    res: Response,
+    next: NextFunction
+  ): Response | void {
+    if (req.body._id === null) {
+      delete req.body._id;
+    }
     delete req.body.timestamps;
-    const model = req.model;
 
-    Object.keys(req.body).forEach((key) => {
-      model[key] = req.body[key];
-    });
-    model.timestamps.updated.by = req.user.username;
-    model.save((err: any, resModel: T) => {
-      if (err) {
-        return this.respondValidationError(err, res, next);
-      } else {
-        const response = resModel.toObject ? resModel.toObject() : resModel;
+    if (this.hasModel(req.model)) {
+      const model = req.model;
 
-        return res.status(200).json(response);
-      }
-    });
+      Object.keys(req.body).forEach((key) => {
+        model[key] = req.body[key];
+      });
+      model.timestamps.updated.by = req.user.username;
+      model.save((err: any, resModel: IApiDocument) => {
+        if (err) {
+          return this.respondValidationError(err, res, next);
+        } else {
+          const response = resModel.toObject ? resModel.toObject() : resModel;
+
+          return res.status(200).json(response);
+        }
+      });
+    } else {
+      return this.respondModelMissingError(res);
+    }
   }
-  softDelete(req: IApiRequest, res: Response, _next: NextFunction) {
-    const model = req.model;
-    model.mark.deleted = true;
-    model.save((err: any, resModel: T) => {
-      /* istanbul ignore if */
-      if (err) {
-        const error: IApiError = {
-          id: 'delete',
-          message: err.message
-        };
+  softDelete(
+    req: IApiRequest,
+    res: Response,
+    _next: NextFunction
+  ): Response | void {
+    if (this.hasModel(req.model)) {
+      const model = req.model;
+      model.mark.deleted = true;
+      model.save((err: any, resModel: IApiDocument) => {
+        /* istanbul ignore if */
+        if (err) {
+          const error: IApiError = {
+            id: 'delete',
+            message: err.message
+          };
 
-        return res.status(400).json({
-          error: error
-        });
-      } else {
-        const response = resModel.toObject ? resModel.toObject() : resModel;
+          return res.status(400).json({
+            error: error
+          });
+        } else {
+          const response = resModel.toObject ? resModel.toObject() : resModel;
 
-        return res.status(200).jsonp(response);
-      }
-    });
+          return res.status(200).jsonp(response);
+        }
+      });
+    } else {
+      return this.respondModelMissingError(res);
+    }
   }
-  delete(req: IApiRequest, res: Response, _next: NextFunction) {
-    const model = req.model;
-    model.remove((err: any) => {
-      /* istanbul ignore if */
-      if (err) {
-        const error: IApiError = {
-          id: 'delete',
-          message: err.message
-        };
-        return res.status(400).json({
-          error: error
-        });
-      } else { return res.status(200).jsonp(model.toObject()); }
-    });
+  delete(
+    req: IApiRequest,
+    res: Response,
+    _next: NextFunction
+  ): Response | void {
+    if (this.hasModel(req.model)) {
+      const model = req.model;
+      model.remove((err: any) => {
+        /* istanbul ignore if */
+        if (err) {
+          const error: IApiError = {
+            id: 'delete',
+            message: err.message
+          };
+          return res.status(400).json({
+            error: error
+          });
+        } else {
+          return res.status(200).jsonp(model.toObject());
+        }
+      });
+    } else {
+      return this.respondModelMissingError(res);
+    }
   }
   findById(
     req: IApiRequest,

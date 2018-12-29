@@ -3,6 +3,7 @@ import { Response, NextFunction } from 'express';
 import { IApiRequest } from './types/IApiRequest';
 import { IApiError } from './types/IApiError';
 import { isString } from './helpers/isString';
+import { IApiDocument } from './types/IApiModel';
 
 abstract class ApiController<T extends Model<Document>> {
   protected model: T;
@@ -12,7 +13,7 @@ abstract class ApiController<T extends Model<Document>> {
   }
 
   // ERROR Responses
-  respondServerError(res: Response, error?: any) {
+  respondServerError(res: Response, error?: any): Response {
     const serverError: IApiError = {
       id: 'serverError',
       message: `failed to get ${ this.model.modelName }`
@@ -22,7 +23,7 @@ abstract class ApiController<T extends Model<Document>> {
       error: error || serverError
     });
   }
-  respondNotFound(id: string, res: Response, modelName: string) {
+  respondNotFound(id: string, res: Response, modelName: string): Response {
     const error: IApiError = {
       id: 'notFound',
       message: `${ modelName || this.model.modelName } ${ id } does not exist`
@@ -32,7 +33,7 @@ abstract class ApiController<T extends Model<Document>> {
       error: error
     });
   }
-  respondInvalidId(res: Response) {
+  respondInvalidId(res: Response): Response {
     const error: IApiError = {
       id: 'invalidId',
       message: 'Invalid id'
@@ -42,7 +43,17 @@ abstract class ApiController<T extends Model<Document>> {
       error: error
     });
   }
-  respondValidationError(err: any, res: Response, next: NextFunction) {
+  respondModelMissingError(res: Response): Response {
+    const error: IApiError = {
+      id: 'modelMissing',
+      message: 'the model is missing in the request'
+    };
+
+    return res.status(400).json({
+      error: error
+    });
+  }
+  respondValidationError(err: any, res: Response, next: NextFunction): Response | void {
     if (err.name === 'ValidationError') {
       const error: IApiError = {
         id: 'validationError',
@@ -66,7 +77,7 @@ abstract class ApiController<T extends Model<Document>> {
       return next(err);
     }
   }
-  apiResponse(req: IApiRequest, res: Response, _next: NextFunction) {
+  apiResponse(req: IApiRequest, res: Response, _next: NextFunction): Response {
     const hasMetaError = req.meta && req.meta.error;
     let status = 200;
     /* istanbul ignore if */
@@ -74,10 +85,10 @@ abstract class ApiController<T extends Model<Document>> {
 
     return res.status(status).json({ meta: req.meta, data: req.data });
   }
-  populateMeta(req: IApiRequest, _res: Response, next: NextFunction) {
+  populateMeta(req: IApiRequest, _res: Response, next: NextFunction): void {
     const qTotal = req.query.total || {};
 
-    return this.model.countDocuments(qTotal, (err: any, total: number) => {
+    this.model.countDocuments(qTotal, (err: any, total: number) => {
       /* istanbul ignore if */
       if (err) {
         return next(err);
@@ -94,6 +105,9 @@ abstract class ApiController<T extends Model<Document>> {
         return next();
       }
     });
+  }
+  protected hasModel(model?: IApiDocument): model is IApiDocument {
+    return typeof model !== 'undefined';
   }
 }
 

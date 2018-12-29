@@ -32,6 +32,15 @@ var ApiController = (function () {
             error: error
         });
     };
+    ApiController.prototype.respondModelMissingError = function (res) {
+        var error = {
+            id: 'modelMissing',
+            message: 'the model is missing in the request'
+        };
+        return res.status(400).json({
+            error: error
+        });
+    };
     ApiController.prototype.respondValidationError = function (err, res, next) {
         if (err.name === 'ValidationError') {
             var error = {
@@ -65,7 +74,7 @@ var ApiController = (function () {
     };
     ApiController.prototype.populateMeta = function (req, _res, next) {
         var qTotal = req.query.total || {};
-        return this.model.countDocuments(qTotal, function (err, total) {
+        this.model.countDocuments(qTotal, function (err, total) {
             if (err) {
                 return next(err);
             }
@@ -81,6 +90,9 @@ var ApiController = (function () {
                 return next();
             }
         });
+    };
+    ApiController.prototype.hasModel = function (model) {
+        return typeof model !== 'undefined';
     };
     return ApiController;
 }());

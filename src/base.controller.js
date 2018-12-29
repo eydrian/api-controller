@@ -63,7 +63,8 @@ var BaseController = (function (_super) {
         });
     };
     BaseController.prototype.read = function (req, res, _next) {
-        return res.jsonp(req.model.toObject());
+        var response = req.model ? req.model.toObject() : {};
+        return res.jsonp(response);
     };
     BaseController.prototype.create = function (req, res, next) {
         var _this = this;
@@ -91,56 +92,71 @@ var BaseController = (function (_super) {
             delete req.body._id;
         }
         delete req.body.timestamps;
-        var model = req.model;
-        Object.keys(req.body).forEach(function (key) {
-            model[key] = req.body[key];
-        });
-        model.timestamps.updated.by = req.user.username;
-        model.save(function (err, resModel) {
-            if (err) {
-                return _this.respondValidationError(err, res, next);
-            }
-            else {
-                var response = resModel.toObject ? resModel.toObject() : resModel;
-                return res.status(200).json(response);
-            }
-        });
+        if (this.hasModel(req.model)) {
+            var model_1 = req.model;
+            Object.keys(req.body).forEach(function (key) {
+                model_1[key] = req.body[key];
+            });
+            model_1.timestamps.updated.by = req.user.username;
+            model_1.save(function (err, resModel) {
+                if (err) {
+                    return _this.respondValidationError(err, res, next);
+                }
+                else {
+                    var response = resModel.toObject ? resModel.toObject() : resModel;
+                    return res.status(200).json(response);
+                }
+            });
+        }
+        else {
+            return this.respondModelMissingError(res);
+        }
     };
     BaseController.prototype.softDelete = function (req, res, _next) {
-        var model = req.model;
-        model.mark.deleted = true;
-        model.save(function (err, resModel) {
-            if (err) {
-                var error = {
-                    id: 'delete',
-                    message: err.message
-                };
-                return res.status(400).json({
-                    error: error
-                });
-            }
-            else {
-                var response = resModel.toObject ? resModel.toObject() : resModel;
-                return res.status(200).jsonp(response);
-            }
-        });
+        if (this.hasModel(req.model)) {
+            var model = req.model;
+            model.mark.deleted = true;
+            model.save(function (err, resModel) {
+                if (err) {
+                    var error = {
+                        id: 'delete',
+                        message: err.message
+                    };
+                    return res.status(400).json({
+                        error: error
+                    });
+                }
+                else {
+                    var response = resModel.toObject ? resModel.toObject() : resModel;
+                    return res.status(200).jsonp(response);
+                }
+            });
+        }
+        else {
+            return this.respondModelMissingError(res);
+        }
     };
     BaseController.prototype.delete = function (req, res, _next) {
-        var model = req.model;
-        model.remove(function (err) {
-            if (err) {
-                var error = {
-                    id: 'delete',
-                    message: err.message
-                };
-                return res.status(400).json({
-                    error: error
-                });
-            }
-            else {
-                return res.status(200).jsonp(model.toObject());
-            }
-        });
+        if (this.hasModel(req.model)) {
+            var model_2 = req.model;
+            model_2.remove(function (err) {
+                if (err) {
+                    var error = {
+                        id: 'delete',
+                        message: err.message
+                    };
+                    return res.status(400).json({
+                        error: error
+                    });
+                }
+                else {
+                    return res.status(200).jsonp(model_2.toObject());
+                }
+            });
+        }
+        else {
+            return this.respondModelMissingError(res);
+        }
     };
     BaseController.prototype.findById = function (req, res, next, id, _urlParam, populate) {
         var _this = this;
