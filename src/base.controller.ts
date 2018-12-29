@@ -5,7 +5,7 @@ import {
   IApiError,
   IApiModel
 } from './types';
-import ApiController from './api.controller.server';
+import ApiController from './api.controller';
 import { IApiQuery } from './types/IApiQuery';
 import { isString, toNumber } from './helpers';
 
