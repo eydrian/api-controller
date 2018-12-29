@@ -10,6 +10,7 @@
   "typings": "src/index.d.ts",
   "scripts": {
     "******************** VERSION **********************": "",
+    "prepublish": "npm run clear && npm run lint && npm run tsc",
     "postversion": "git push && git push --tags",
     "********************** DEVELOPMENT ******************************": "",
     "start": "npm run clear && npm run watch",
