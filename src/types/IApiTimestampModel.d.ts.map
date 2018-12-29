@@ -1,0 +1,1 @@
+{"version":3,"file":"IApiTimestampModel.d.ts","sourceRoot":"","sources":["IApiTimestampModel.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,kBAAkB;IACjC,OAAO,EAAE;QACP,EAAE,EAAE,IAAI,CAAC;QACT,EAAE,EAAE,MAAM,CAAA;KACX,CAAC;IACF,OAAO,EAAE;QACP,EAAE,EAAE,IAAI,CAAC;QACT,EAAE,EAAE,MAAM,CAAA;KACX,CAAC;CACH"}
