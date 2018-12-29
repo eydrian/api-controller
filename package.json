@@ -7,13 +7,26 @@
   "description": "a nodejs api controller",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "******************** VERSION **********************": "",
+    "postversion": "git push && git push --tags",
+    "********************** DEVELOPMENT ******************************": "",
+    "start": "npm run clear && npm run watch",
+    "********************** LINT ******************************": "",
+    "lint": "tslint -p tsconfig.json",
+    "********************** TRANSPILE **************************": "",
+    "tsc": "tsc -p tsconfig.json",
+    "********************** WATCH *****************************": "",
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript\" -c \"yellow.bold\" \"npm run watch:ts\"",
+    "watch:ts": "npm run tsc -- -w",
+    "********************** CLEAR **********************": "",
+    "clear": "npm run clear:dist",
+    "clear:dist": "find dist -type f \\( -iname '*.js' -o -iname '*.js.map' \\) ! -iname '*.json' -delete"
   },
   "keywords": [
     "node",
     "js"
   ],
-  "author": "Adrian Etter",
+  "author": "Adrian Etter <engineering@adrianetter.com> (https://www.adrianetter.com)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -24,12 +37,19 @@
   },
   "homepage": "https://github.com/eydrian/api-controller#readme",
   "peerDependencies": {
-    "mongoose": "^5.0.0"
+    "mongoose": "^5.0.0",
+    "express": "^4.16.4"
   },
   "devDependencies": {
-    "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git"
+    "@types/express": "^4.16.0",
+    "@types/mongoose": "^5.3.5",
+    "@types/node": "^10.12.18",
+    "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
+    "express": "^4.16.4",
     "mongoose": "^5.4.1"
   }
 }
