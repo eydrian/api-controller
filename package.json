@@ -5,7 +5,9 @@
     "node": ">=6.9.0"
   },
   "description": "a nodejs api controller",
-  "main": "index.js",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "typings": "src/index.d.ts",
   "scripts": {
     "******************** VERSION **********************": "",
     "postversion": "git push && git push --tags",
@@ -20,7 +22,7 @@
     "watch:ts": "npm run tsc -- -w",
     "********************** CLEAR **********************": "",
     "clear": "npm run clear:dist",
-    "clear:dist": "find dist -type f \\( -iname '*.js' -o -iname '*.js.map' \\) ! -iname '*.json' -delete"
+    "clear:dist": "find src -type f \\( -iname '*.js' -o -iname '*.js.map' -o -iname '*.d.ts' -o -iname '*.d.ts.map' \\) -delete"
   },
   "keywords": [
     "node",
