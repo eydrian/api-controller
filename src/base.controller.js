@@ -1,34 +1,19 @@
 "use strict";
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var mongoose_1 = require("mongoose");
-var api_controller_1 = __importDefault(require("./api.controller"));
-var helpers_1 = require("./helpers");
-var isValidId = mongoose_1.Types.ObjectId.isValid;
-var BaseController = (function (_super) {
-    __extends(BaseController, _super);
-    function BaseController(model) {
-        var _this = _super.call(this, model) || this;
-        _this.filters = ['type', 'deleted'];
-        return _this;
+const mongoose_1 = require("mongoose");
+const api_controller_1 = __importDefault(require("./api.controller"));
+const helpers_1 = require("./helpers");
+const isValidId = mongoose_1.Types.ObjectId.isValid;
+class BaseController extends api_controller_1.default {
+    constructor(model) {
+        super(model);
+        this.filters = ['type', 'deleted'];
     }
-    BaseController.prototype.index = function (req, _res, next) {
-        var query = {
+    index(req, _res, next) {
+        let query = {
             offset: 0,
             limit: 0
         };
@@ -52,7 +37,7 @@ var BaseController = (function (_super) {
             .sort(query.sort)
             .select(query.select)
             .populate(query.populate)
-            .exec(function (err, models) {
+            .exec((err, models) => {
             if (err) {
                 return next(err);
             }
@@ -61,49 +46,47 @@ var BaseController = (function (_super) {
                 return next();
             }
         });
-    };
-    BaseController.prototype.read = function (req, res, _next) {
-        var response = req.model ? req.model.toObject() : {};
+    }
+    read(req, res, _next) {
+        const response = req.model ? req.model.toObject() : {};
         return res.jsonp(response);
-    };
-    BaseController.prototype.create = function (req, res, next) {
-        var _this = this;
+    }
+    create(req, res, next) {
         delete req.body._id;
         delete req.body.timestamps;
-        var Model = this.model;
-        var model = new Model(req.body);
+        const Model = this.model;
+        const model = new Model(req.body);
         model.timestamps = {
             created: {
                 by: req.user.username
             }
         };
-        model.save(function (err, resModel) {
+        model.save((err, resModel) => {
             if (err) {
-                return _this.respondValidationError(err, res, next);
+                return this.respondValidationError(err, res, next);
             }
             else {
                 res.status(201).json(resModel.toObject());
             }
         });
-    };
-    BaseController.prototype.update = function (req, res, next) {
-        var _this = this;
+    }
+    update(req, res, next) {
         if (req.body._id === null) {
             delete req.body._id;
         }
         delete req.body.timestamps;
         if (this.hasModel(req.model)) {
-            var model_1 = req.model;
-            Object.keys(req.body).forEach(function (key) {
-                model_1[key] = req.body[key];
+            const model = req.model;
+            Object.keys(req.body).forEach((key) => {
+                model[key] = req.body[key];
             });
-            model_1.timestamps.updated.by = req.user.username;
-            model_1.save(function (err, resModel) {
+            model.timestamps.updated.by = req.user.username;
+            model.save((err, resModel) => {
                 if (err) {
-                    return _this.respondValidationError(err, res, next);
+                    return this.respondValidationError(err, res, next);
                 }
                 else {
-                    var response = resModel.toObject ? resModel.toObject() : resModel;
+                    const response = resModel.toObject ? resModel.toObject() : resModel;
                     return res.status(200).json(response);
                 }
             });
@@ -111,14 +94,14 @@ var BaseController = (function (_super) {
         else {
             return this.respondModelMissingError(res);
         }
-    };
-    BaseController.prototype.softDelete = function (req, res, _next) {
+    }
+    softDelete(req, res, _next) {
         if (this.hasModel(req.model)) {
-            var model = req.model;
+            const model = req.model;
             model.mark.deleted = true;
-            model.save(function (err, resModel) {
+            model.save((err, resModel) => {
                 if (err) {
-                    var error = {
+                    const error = {
                         id: 'delete',
                         message: err.message
                     };
@@ -127,7 +110,7 @@ var BaseController = (function (_super) {
                     });
                 }
                 else {
-                    var response = resModel.toObject ? resModel.toObject() : resModel;
+                    const response = resModel.toObject ? resModel.toObject() : resModel;
                     return res.status(200).jsonp(response);
                 }
             });
@@ -135,13 +118,13 @@ var BaseController = (function (_super) {
         else {
             return this.respondModelMissingError(res);
         }
-    };
-    BaseController.prototype.delete = function (req, res, _next) {
+    }
+    delete(req, res, _next) {
         if (this.hasModel(req.model)) {
-            var model_2 = req.model;
-            model_2.remove(function (err) {
+            const model = req.model;
+            model.remove((err) => {
                 if (err) {
-                    var error = {
+                    const error = {
                         id: 'delete',
                         message: err.message
                     };
@@ -150,26 +133,25 @@ var BaseController = (function (_super) {
                     });
                 }
                 else {
-                    return res.status(200).jsonp(model_2.toObject());
+                    return res.status(200).jsonp(model.toObject());
                 }
             });
         }
         else {
             return this.respondModelMissingError(res);
         }
-    };
-    BaseController.prototype.findById = function (req, res, next, id, _urlParam, populate) {
-        var _this = this;
+    }
+    findById(req, res, next, id, _urlParam, populate) {
         if (isValidId(id)) {
             if (typeof populate === 'undefined' || !populate || !Array.isArray(populate)) {
                 populate = [];
             }
-            this.model.findById(id).populate(populate).exec(function (err, model) {
+            this.model.findById(id).populate(populate).exec((err, model) => {
                 if (err) {
-                    return _this.respondServerError(res);
+                    return this.respondServerError(res);
                 }
                 if (!model) {
-                    return _this.respondNotFound(id, res, _this.model.modelName);
+                    return this.respondNotFound(id, res, this.model.modelName);
                 }
                 else {
                     req.model = model;
@@ -180,41 +162,39 @@ var BaseController = (function (_super) {
         else {
             return this.respondInvalidId(res);
         }
-    };
-    BaseController.prototype.stats = function (req, res, next) {
-        var _this = this;
-        this.model.countDocuments(function (err, result) {
+    }
+    stats(req, res, next) {
+        this.model.countDocuments((err, result) => {
             if (err) {
-                return _this.respondServerError(res, err);
+                return this.respondServerError(res, err);
             }
             else {
                 if (typeof req.stats !== 'object') {
                     req.stats = {};
                 }
-                req.stats[_this.model.collection.name] = result;
+                req.stats[this.model.collection.name] = result;
                 return next();
             }
         });
-    };
-    BaseController.prototype.statsResponse = function (req, res, _next) {
+    }
+    statsResponse(req, res, _next) {
         if (typeof req.stats !== 'object') {
             req.stats = {};
         }
         return res.status(200).json(req.stats);
-    };
-    BaseController.prototype.statistics = function (req, res, next) {
-        var _this = this;
+    }
+    statistics(req, res, next) {
         if (typeof this.model.statistics === 'function') {
-            var query = req.dateRange || {};
-            this.model.statistics(query, function (err, result) {
+            const query = req.dateRange || {};
+            this.model.statistics(query, (err, result) => {
                 if (err) {
-                    return _this.respondServerError(res, err);
+                    return this.respondServerError(res, err);
                 }
                 else {
                     if (typeof req.stats !== 'object') {
                         req.stats = {};
                     }
-                    req.stats[_this.model.collection.name] = result;
+                    req.stats[this.model.collection.name] = result;
                     return next();
                 }
             });
@@ -222,11 +202,11 @@ var BaseController = (function (_super) {
         else {
             return this.stats(req, res, next);
         }
-    };
-    BaseController.prototype.parseDateRange = function (req, _res, next, _id, _urlParam) {
-        var year = parseInt(req.params.year, 10);
-        var month = parseInt(req.params.month, 10);
-        var toMonth = 12;
+    }
+    parseDateRange(req, _res, next, _id, _urlParam) {
+        const year = parseInt(req.params.year, 10);
+        let month = parseInt(req.params.month, 10);
+        let toMonth = 12;
         if (!isNaN(year)) {
             if (isNaN(month)) {
                 month = 0;
@@ -235,10 +215,10 @@ var BaseController = (function (_super) {
                 month = Math.max(Math.min(month, 12), 1);
                 toMonth = --month + 1;
             }
-            var from = new Date();
+            let from = new Date();
             from = new Date(from.setFullYear(year, month, 1));
             from = new Date(from.setHours(0, 0, 0, 0));
-            var to = new Date(from.valueOf());
+            let to = new Date(from.valueOf());
             to = new Date(to.setFullYear(year, toMonth, 1));
             if (typeof req.stats !== 'object') {
                 req.stats = {};
@@ -250,43 +230,42 @@ var BaseController = (function (_super) {
             req.dateRange = { $and: [{ date: { $gte: from } }, { date: { $lt: to } }] };
         }
         return next();
-    };
-    BaseController.prototype.parseSort = function (sort) {
-        var parsedSort = {};
+    }
+    parseSort(sort) {
+        const parsedSort = {};
         try {
-            var _sort_1 = JSON.parse(sort);
-            Object.keys(_sort_1).forEach(function (key) {
-                parsedSort[key] = parseInt(_sort_1[key], 10);
+            const _sort = JSON.parse(sort);
+            Object.keys(_sort).forEach((key) => {
+                parsedSort[key] = parseInt(_sort[key], 10);
             });
         }
         catch (e) {
             if (e.name === 'SyntaxError') {
-                var field = sort;
+                const field = sort;
                 parsedSort[field] = 1;
             }
         }
         return parsedSort;
-    };
-    BaseController.prototype.parseFilter = function (query) {
-        var filter = {};
+    }
+    parseFilter(query) {
+        let filter = {};
         try {
             filter = query.filter ? JSON.parse(query.filter.replace(/\'/g, '"')) : {};
         }
         catch (e) {
             filter = {};
         }
-        this.filters.forEach(function (f) {
+        this.filters.forEach(f => {
             if (typeof filter[f] !== 'undefined' && filter[f] !== null) {
                 query[f] = filter[f].toString();
             }
         });
         return query;
-    };
-    BaseController.prototype.parsePagination = function (field, boundary) {
-        var value = helpers_1.isString(field) ? parseInt(field, 10) : field;
+    }
+    parsePagination(field, boundary) {
+        const value = helpers_1.isString(field) ? parseInt(field, 10) : field;
         return isNaN(value) ? boundary : value;
-    };
-    return BaseController;
-}(api_controller_1.default));
+    }
+}
 exports.default = BaseController;
 //# sourceMappingURL=base.controller.js.map

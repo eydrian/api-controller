@@ -10,7 +10,6 @@ import { IApiQuery } from './types/IApiQuery';
 import { isString, toNumber } from './helpers';
 import { IApiDocument } from './types/IApiModel';
 
-
 const isValidId = Types.ObjectId.isValid;
 
 abstract class BaseController<T extends IApiModel> extends ApiController<T> {
@@ -280,7 +279,7 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     return parsedSort;
   }
   parseFilter(query: IApiQuery) {
-    let filter: {[key: string]: string} = {};
+    let filter: { [key: string]: string } = {};
 
     try {
       filter = query.filter ? JSON.parse(query.filter.replace(/\'/g, '"')) : {};
