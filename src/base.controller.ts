@@ -198,7 +198,9 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
   }
   stats(req: IApiRequest, res: Response, next: NextFunction) {
     this.model.countDocuments((err, result) => {
-      if (err) { return this.respondServerError(res, err); } else {
+      if (err) {
+        return this.respondServerError(res, err);
+      } else {
         if (typeof req.stats !== 'object') {
           req.stats = {};
         }
@@ -219,14 +221,20 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     if (typeof this.model.statistics === 'function') {
       const query = req.dateRange || {};
       this.model.statistics(query, (err, result) => {
-        if (err) { return this.respondServerError(res, err); } else {
-          if (typeof req.stats !== 'object') { req.stats = {}; }
+        if (err) {
+          return this.respondServerError(res, err);
+        } else {
+          if (typeof req.stats !== 'object') {
+            req.stats = {};
+          }
           req.stats[this.model.collection.name] = result;
 
           return next();
         }
       });
-    } else { return this.stats(req, res, next); }
+    } else {
+      return this.stats(req, res, next);
+    }
   }
   parseDateRange(
     req: IApiRequest,
@@ -234,13 +242,15 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     next: NextFunction,
     _id: string,
     _urlParam: string
-  ) {
+  ): void {
     // FIXME: this function is called twice for /year/month ....
     const year = parseInt(req.params.year, 10);
     let month = parseInt(req.params.month, 10);
     let toMonth = 12;
     if (!isNaN(year)) {
-      if (isNaN(month)) { month = 0; } else {
+      if (isNaN(month)) {
+        month = 0;
+      } else {
         month = Math.max(Math.min(month, 12), 1);
         toMonth = --month + 1;
       }
@@ -250,7 +260,9 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       let to = new Date(from.valueOf());
       to = new Date(to.setFullYear(year, toMonth, 1));
 
-      if (typeof req.stats !== 'object') { req.stats = {}; }
+      if (typeof req.stats !== 'object') {
+        req.stats = {};
+      }
       req.stats.range = {
         from: from,
         to: to
