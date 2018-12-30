@@ -1,13 +1,16 @@
 import {
+  createRequest,
+  createResponse,
+  MockRequest,
+  MockResponse
+} from 'node-mocks-http';
+import {
   Schema,
   model
 } from 'mongoose';
 import BaseController from './base.controller';
 import { IApiModel, IApiDocument } from './types';
 import { IApiQuery } from './types/IApiQuery';
-import { IApiRequest } from './types/IApiRequest';
-import { Request } from 'express';
-import { IncomingMessage } from 'http';
 
 interface IMockModel extends IApiModel {
   property?: string;
@@ -25,11 +28,17 @@ const mockSchema = new Schema({
 });
 
 describe('base.controller spec', () => {
+  let mockModel: IApiModel;
   let controller: MockController;
+  const statsResults = {
+    statsOne: 0,
+    statsTwo: 300,
+    statsThree: -12,
+  };
+  const mockNext = (err?: any) => err;
+
   beforeEach(() => {
-
-    const mockModel: IApiModel = model<IApiDocument, IMockModel>('User', mockSchema);
-
+    mockModel = model<IApiDocument, IMockModel>('mockModel', mockSchema);
     controller = new MockController(mockModel);
   });
 
@@ -103,29 +112,211 @@ describe('base.controller spec', () => {
       expect(parsedQuery).toEqual(mockQuery);
     });
   });
-  // describe('"parseDateRange()"', () => {
-  //   it('should be possible to parse date ranges', (done) => {
-  //     const req = new IncomingMessage(null);
-  //     // const mockRequest: IApiRequest = Object.assign({}, req, {
-  //     //   req,
-  //     //   body: {},
-  //     //   cookies: {},
-  //     //   query: {
-  //     //     limit: 0,
-  //     //     offset: 0
-  //     //   },
-  //     //   params: {},
-  //     // };
+  describe('"parseDateRange() fills requests dataRange and stats"', () => {
+    it('should be possible to parse date ranges from given year and month param', () => {
+      const year = 2018;
+      const month = 12;
+      const mockRequest = createRequest({
+        params: {
+          year: year.toString(),
+          month: month.toString()
+        }
+      });
+      const mockResponse = createResponse();
+      const from = new Date(year, month - 1, 1, 0, 0, 0);
+      const to = new Date(year, month, 1, 0, 0, 0);
+      const expectedDataRange = {
+        $and: [{
+          date: {
+            $gte: from
+          }
+        }, {
+          date: {
+            $lt: to
+          }
+        }]
+      };
 
-  //     controller.parseDateRange(req, {}, mockNext, '', '');
+      controller.parseDateRange(mockRequest, mockResponse, mockNext, '', '');
+      expect(mockRequest.dateRange).toEqual(expectedDataRange);
+      expect(mockRequest.stats.range).toEqual({from, to});
+    });
+    it('should be possible to parse date range from a year param', () => {
+      const year = 2018;
+      const mockRequest = createRequest({
+        params: {
+          year: year.toString()
+        }
+      });
+      const mockResponse = createResponse();
+      const from = new Date(year, 0, 1, 0, 0, 0);
+      const to = new Date(year, 12, 1, 0, 0, 0);
+      const expectedDataRange = {
+        $and: [{
+          date: {
+            $gte: from
+          }
+        }, {
+          date: {
+            $lt: to
+          }
+        }]
+      };
 
-  //     function mockNext(req, _res: any): any {
-  //       expect(req.dateRange).toEqual('foo');
+      controller.parseDateRange(mockRequest, mockResponse, mockNext, '', '');
+      expect(mockRequest.dateRange).toEqual(expectedDataRange);
+      expect(mockRequest.stats.range).toEqual({from, to});
+    });
+    it('should not fail to parse date range from an invalid year param', () => {
+      const year = 'foo';
+      const mockRequest = createRequest({
+        params: {
+          year: year.toString()
+        }
+      });
+      const mockResponse = createResponse();
 
-  //       return done();
-  //     }
-  //   });
-  // });
+      controller.parseDateRange(mockRequest, mockResponse, mockNext, '', '');
+      expect(mockRequest.dateRange).toBeFalsy();
+      expect(mockRequest.stats).toBeFalsy();
+    });
+    it(
+      'should not fail to parse date range from a valid year but invalid month param',
+      () => {
+        const year = 2019;
+        const month = 'foo';
+        const mockRequest = createRequest({
+          params: {
+            year: year.toString(),
+            month: month
+          },
+          stats: {}
+        });
+        const mockResponse = createResponse();
+
+        const from = new Date(year, 0, 1, 0, 0, 0);
+        const to = new Date(year, 12, 1, 0, 0, 0);
+        const expectedDataRange = {
+          $and: [{
+            date: {
+              $gte: from
+            }
+          }, {
+            date: {
+              $lt: to
+            }
+          }]
+        };
+
+        controller.parseDateRange(mockRequest, mockResponse, mockNext, '', '');
+        expect(mockRequest.dateRange).toEqual(expectedDataRange);
+        expect(mockRequest.stats.range).toEqual({from, to});
+      });
+  });
+  describe('"statistics()"', () => {
+    let mockRequest: MockRequest<any>;
+    let mockResponse: MockResponse<any>;
+    beforeEach(() => {
+      mockRequest = createRequest({});
+      mockResponse = createResponse();
+    });
+
+    it('should append statistics to request if model has statistics function', () => {
+      mockModel.statistics = jest.fn((_query, callback) => callback(null, statsResults));
+
+      controller.statistics(mockRequest, mockResponse, mockNext);
+
+      expect(mockRequest.stats[mockModel.collection.name]).toEqual(statsResults);
+    });
+    it('should not recreate stats object if already exists', () => {
+      mockModel.statistics = jest.fn((_query, callback) => callback(null, statsResults));
+      mockRequest.stats = {
+        otherStats: 'something'
+      };
+
+      controller.statistics(mockRequest, mockResponse, mockNext);
+
+      expect(mockRequest.stats[mockModel.collection.name]).toEqual(statsResults);
+    });
+    it('should respond with server error if error occurs', () => {
+      const error = {
+        id: 'error',
+        message: 'message'
+      };
+      mockModel.statistics = jest.fn((_query, callback) => callback(error, null));
+
+      controller.statistics(mockRequest, mockResponse, mockNext);
+
+      expect(mockResponse.statusCode).toBe(500);
+      expect(JSON.parse(mockResponse._getData())).toEqual({ error });
+    });
+    it('should append count of objects to request if model has no statistics function',
+      () => {
+        const nrOfDocuments = 111;
+        mockModel.countDocuments =
+          jest.fn((callback) => callback(null, nrOfDocuments));
+
+        controller.statistics(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.stats[mockModel.collection.name]).toEqual(nrOfDocuments);
+      });
+    it(
+      'should add minimal stats and not create stats if stats already exists on req',
+      () => {
+        const nrOfDocuments = 1000;
+        mockRequest.stats = {
+          otherStats: 'something'
+        };
+        mockModel.countDocuments =
+          jest.fn((callback) => callback(null, nrOfDocuments));
+
+        controller.statistics(mockRequest, mockResponse, mockNext);
+
+        expect(mockRequest.stats[mockModel.collection.name]).toEqual(nrOfDocuments);
+      });
+    it('should respond with server error if error occurs', () => {
+      const error = {
+        id: 'error',
+        message: 'message'
+      };
+      mockModel.countDocuments = jest.fn((callback) => callback(error, null));
+
+      controller.statistics(mockRequest, mockResponse, mockNext);
+
+      expect(mockResponse.statusCode).toBe(500);
+      expect(JSON.parse(mockResponse._getData())).toEqual({ error });
+    });
+
+    afterEach(() => {
+      delete mockModel.statistics;
+      delete mockModel.countDocuments;
+    });
+  });
+  describe('"statsResponse()"', () => {
+    let mockRequest: MockRequest<any>;
+    let mockResponse: MockResponse<any>;
+    beforeEach(() => {
+      mockRequest = createRequest({});
+      mockResponse = createResponse();
+    });
+    it('should respond with stats', () => {
+      controller.statsResponse(mockRequest, mockResponse, mockNext);
+
+      expect(JSON.parse(mockResponse._getData())).toEqual({});
+      expect(mockResponse.statusCode).toBe(200);
+    });
+    it('should not recreate stats if exists', () => {
+      const stats = {
+        this: 'that'
+      };
+      mockRequest.stats = stats;
+      controller.statsResponse(mockRequest, mockResponse, mockNext);
+
+      expect(JSON.parse(mockResponse._getData())).toEqual(stats);
+    });
+
+  });
+
+
 
 });
-
