@@ -15,22 +15,16 @@ class BaseController extends api_controller_1.default {
     index(req, _res, next) {
         let query = {
             offset: 0,
-            limit: 0
+            limit: 100
         };
-        req.query.offset = this.parsePagination(req.query.offset, 0);
-        req.query.limit = this.parsePagination(req.query.limit, 100);
-        if (req.query.sort) {
-            req.query.sort = this.parseSort(req.query.sort);
-        }
-        if (req.query.filter) {
-            req.query = this.parseFilter(req.query);
-        }
+        this.processQuery(req, query);
         if (typeof this.model.parseQuery === 'function') {
             query = this.model.parseQuery(req.query);
         }
-        if (!query.populate || !Array.isArray(query.populate)) {
-            query.populate = [];
+        else {
+            query = this.parseQuery(req.query);
         }
+        query.populate = query.populate ? query.populate : [];
         return this.model.find(query.q)
             .limit(helpers_1.toNumber(query.limit))
             .skip(helpers_1.toNumber(query.offset))
@@ -48,8 +42,13 @@ class BaseController extends api_controller_1.default {
         });
     }
     read(req, res, _next) {
-        const response = req.model ? req.model.toObject() : {};
-        return res.jsonp(response);
+        if (this.hasModel(req.model)) {
+            const model = req.model.toObject();
+            return res.jsonp(model);
+        }
+        else {
+            return this.respondModelMissingError(res);
+        }
     }
     create(req, res, next) {
         delete req.body._id;
@@ -86,8 +85,7 @@ class BaseController extends api_controller_1.default {
                     return this.respondValidationError(err, res, next);
                 }
                 else {
-                    const response = resModel.toObject ? resModel.toObject() : resModel;
-                    return res.status(200).json(response);
+                    return res.status(200).json(resModel.toObject());
                 }
             });
         }
@@ -99,19 +97,13 @@ class BaseController extends api_controller_1.default {
         if (this.hasModel(req.model)) {
             const model = req.model;
             model.mark.deleted = true;
+            model.timestamps.updated.by = req.user.username;
             model.save((err, resModel) => {
                 if (err) {
-                    const error = {
-                        id: 'delete',
-                        message: err.message
-                    };
-                    return res.status(400).json({
-                        error: error
-                    });
+                    return this.respondDeletionError(res, err);
                 }
                 else {
-                    const response = resModel.toObject ? resModel.toObject() : resModel;
-                    return res.status(200).jsonp(response);
+                    return res.status(200).jsonp(resModel.toObject());
                 }
             });
         }
@@ -124,13 +116,7 @@ class BaseController extends api_controller_1.default {
             const model = req.model;
             model.remove((err) => {
                 if (err) {
-                    const error = {
-                        id: 'delete',
-                        message: err.message
-                    };
-                    return res.status(400).json({
-                        error: error
-                    });
+                    return this.respondDeletionError(res, err);
                 }
                 else {
                     return res.status(200).jsonp(model.toObject());
@@ -143,7 +129,7 @@ class BaseController extends api_controller_1.default {
     }
     findById(req, res, next, id, _urlParam, populate) {
         if (isValidId(id)) {
-            if (typeof populate === 'undefined' || !populate || !Array.isArray(populate)) {
+            if (typeof populate === 'undefined') {
                 populate = [];
             }
             this.model.findById(id).populate(populate).exec((err, model) => {
@@ -231,6 +217,16 @@ class BaseController extends api_controller_1.default {
         }
         return next();
     }
+    processQuery(req, defaultQuery) {
+        req.query.offset = this.parsePagination(req.query.offset, defaultQuery.offset);
+        req.query.limit = this.parsePagination(req.query.limit, defaultQuery.limit);
+        if (req.query.sort) {
+            req.query.sort = this.parseSort(req.query.sort);
+        }
+        if (req.query.filter) {
+            req.query = this.parseFilter(req.query);
+        }
+    }
     parseSort(sort) {
         const parsedSort = {};
         try {
@@ -262,9 +258,20 @@ class BaseController extends api_controller_1.default {
         });
         return query;
     }
-    parsePagination(field, boundary) {
-        const value = helpers_1.isString(field) ? parseInt(field, 10) : field;
-        return isNaN(value) ? boundary : value;
+    parsePagination(value, defaultValue) {
+        const _value = helpers_1.isString(value) ? parseInt(value, 10) : value;
+        const _default = helpers_1.isString(defaultValue) ? parseInt(defaultValue, 10) : defaultValue;
+        return isNaN(_value) ? _default : _value;
+    }
+    parseQuery(query) {
+        return {
+            q: {},
+            offset: query.offset,
+            limit: query.limit,
+            sort: query.sort,
+            filter: query.filter,
+            populate: query.populate
+        };
     }
 }
 exports.default = BaseController;

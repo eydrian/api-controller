@@ -1,8 +1,9 @@
+export interface IPopulate {
+    select: string;
+    path: string;
+}
 export interface IApiQuery {
-    populate?: [{
-        select: 'string';
-        path: 'string';
-    }] | [];
+    populate?: IPopulate[] | [];
     q?: any;
     limit: string | number;
     offset: string | number;

@@ -41,6 +41,15 @@ class ApiController {
             error: error
         });
     }
+    respondDeletionError(res, err) {
+        const error = {
+            id: 'delete',
+            message: err.message
+        };
+        return res.status(400).json({
+            error: error
+        });
+    }
     respondValidationError(err, res, next) {
         if (err.name === 'ValidationError') {
             const error = {
