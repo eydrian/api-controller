@@ -5,9 +5,9 @@
     "node": ">=6.9.0"
   },
   "description": "a nodejs api controller",
-  "main": "src/index.js",
-  "module": "src/index.js",
-  "typings": "src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "******************** VERSION **********************": "",
     "prepublish": "npm run clear && npm run lint && npm run tsc",

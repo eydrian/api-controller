@@ -1,4 +1,5 @@
 import { Model, Document } from 'mongoose';
+import { ObjectID } from 'bson';
 import { Response, NextFunction } from 'express';
 import { IApiRequest } from './types/IApiRequest';
 import { IApiDocument } from './types/IApiModel';
@@ -6,7 +7,7 @@ declare abstract class ApiController<T extends Model<Document>> {
     protected model: T;
     constructor(model: T);
     respondServerError(res: Response, error?: any): Response;
-    respondNotFound(id: string, res: Response, modelName: string): Response;
+    respondNotFound(id: string | number | ObjectID, res: Response, modelName: string): Response;
     respondInvalidId(res: Response): Response;
     respondModelMissingError(res: Response): Response;
     respondValidationError(err: any, res: Response, next: NextFunction): Response | void;

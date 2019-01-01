@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+import { ObjectID } from 'bson';
 import { IApiRequest, IApiModel } from './types';
 import ApiController from './api.controller';
 import { IApiQuery } from './types/IApiQuery';
@@ -12,7 +13,7 @@ declare abstract class BaseController<T extends IApiModel> extends ApiController
     update(req: IApiRequest, res: Response, next: NextFunction): Response | void;
     softDelete(req: IApiRequest, res: Response, _next: NextFunction): Response | void;
     delete(req: IApiRequest, res: Response, _next: NextFunction): Response | void;
-    findById(req: IApiRequest, res: Response, next: NextFunction, id: string, _urlParam: any, populate: string[]): Response | void;
+    findById(req: IApiRequest, res: Response, next: NextFunction, id: string | number | ObjectID, _urlParam?: any, populate?: string[]): Response | void;
     stats(req: IApiRequest, res: Response, next: NextFunction): void;
     statsResponse(req: IApiRequest, res: Response, _next: NextFunction): import("express-serve-static-core").Response;
     statistics(req: IApiRequest, res: Response, next: NextFunction): void;

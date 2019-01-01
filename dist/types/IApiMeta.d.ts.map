@@ -1,0 +1,1 @@
+{"version":3,"file":"IApiMeta.d.ts","sourceRoot":"","sources":["../../src/types/IApiMeta.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,SAAS,EAAE,MAAM,aAAa,CAAC;AAExC,MAAM,WAAW,QAAQ;IACvB,KAAK,EAAE,MAAM,CAAC;IACd,KAAK,EAAE,MAAM,CAAC;IACd,MAAM,EAAE,MAAM,CAAC;IACf,KAAK,EAAE,MAAM,CAAC;IACd,KAAK,CAAC,EAAE,SAAS,CAAC;CACnB"}
