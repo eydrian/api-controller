@@ -1,12 +1,13 @@
 import { Types } from 'mongoose';
 import { Response, NextFunction } from 'express';
+import { ObjectID } from 'bson';
 import {
   IApiRequest,
   IApiError,
   IApiModel
 } from './types';
 import ApiController from './api.controller';
-import { IApiQuery } from './types/IApiQuery';
+import { IApiQuery, IPopulate } from './types/IApiQuery';
 import { isString, toNumber } from './helpers';
 import { IApiDocument } from './types/IApiModel';
 
@@ -22,10 +23,10 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
   index(req: IApiRequest, _res: Response, next: NextFunction) {
     let query: IApiQuery = {
       offset: 0,
-      limit: 0
+      limit: 100
     };
-    req.query.offset = this.parsePagination(req.query.offset, 0);
-    req.query.limit = this.parsePagination(req.query.limit, 100);
+    req.query.offset = this.parsePagination(req.query.offset, query.offset);
+    req.query.limit = this.parsePagination(req.query.limit, query.limit);
     if (req.query.sort) { req.query.sort = this.parseSort(req.query.sort); }
     if (req.query.filter) { req.query = this.parseFilter(req.query); }
 
@@ -34,9 +35,7 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       query = this.model.parseQuery(req.query);
     }
 
-    if (!query.populate || !Array.isArray(query.populate)) {
-      query.populate = [];
-    }
+    query.populate = !query.populate ? query.populate : [];
 
     return this.model.find(query.q)
       .limit(toNumber(query.limit))
@@ -60,9 +59,9 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     res: Response,
     _next: NextFunction
   ) {
-    const response = req.model ? req.model.toObject() : {};
+    const model = req.model ? req.model.toObject() : {};
 
-    return res.jsonp(response);
+    return res.jsonp(model);
   }
   create(req: IApiRequest, res: Response, next: NextFunction) {
     delete req.body._id;
@@ -171,13 +170,13 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     req: IApiRequest,
     res: Response,
     next: NextFunction,
-    id: string,
-    _urlParam: any,
-    populate: string[]
+    id: string | number | ObjectID,
+    _urlParam?: any,
+    populate?: IPopulate[]
   ): Response | void {
     if (isValidId(id)) {
       /* istanbul ignore if */
-      if (typeof populate === 'undefined' || !populate || !Array.isArray(populate)) {
+      if (typeof populate === 'undefined') {
         populate = [];
       }
 
@@ -194,7 +193,9 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
           return next();
         }
       });
-    } else { return this.respondInvalidId(res); }
+    } else {
+      return this.respondInvalidId(res);
+    }
   }
   stats(req: IApiRequest, res: Response, next: NextFunction) {
     this.model.countDocuments((err, result) => {
@@ -308,10 +309,11 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     return query;
   }
 
-  parsePagination(field: string | number, boundary: number) {
+  parsePagination(field: string | number, boundary: string | number) {
     const value = isString(field) ? parseInt(field, 10) : field;
+    const edge = isString(boundary) ? parseInt(boundary, 10) : boundary;
 
-    return isNaN(value) ? boundary : value;
+    return isNaN(value) ? edge : value;
   }
 
 }
