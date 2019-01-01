@@ -1,4 +1,5 @@
 import { Model, Document } from 'mongoose';
+import { ObjectID } from 'bson';
 import { Response, NextFunction } from 'express';
 import { IApiRequest } from './types/IApiRequest';
 import { IApiError } from './types/IApiError';
@@ -23,7 +24,11 @@ abstract class ApiController<T extends Model<Document>> {
       error: error || serverError
     });
   }
-  respondNotFound(id: string, res: Response, modelName: string): Response {
+  respondNotFound(
+    id: string | number | ObjectID,
+    res: Response,
+    modelName: string
+  ): Response {
     const error: IApiError = {
       id: 'notFound',
       message: `${ modelName || this.model.modelName } ${ id } does not exist`
