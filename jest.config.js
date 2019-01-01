@@ -58,7 +58,8 @@ module.exports = {
   // A set of global variables that need to be available in all test environments
   globals: {
     'ts-jest': {
-      'tsConfig': 'src/tsconfig.test.json'
+      'tsConfig': 'src/tsconfig.test.json',
+      'diagnostics': true
     }
   },
 
