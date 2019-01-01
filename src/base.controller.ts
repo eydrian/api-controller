@@ -3,7 +3,6 @@ import { Response, NextFunction } from 'express';
 import { ObjectID } from 'bson';
 import {
   IApiRequest,
-  IApiError,
   IApiModel
 } from './types';
 import ApiController from './api.controller';
@@ -123,21 +122,13 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     if (this.hasModel(req.model)) {
       const model = req.model;
       model.mark.deleted = true;
+      model.timestamps.updated.by = req.user.username;
       model.save((err: any, resModel: IApiDocument) => {
         /* istanbul ignore if */
         if (err) {
-          const error: IApiError = {
-            id: 'delete',
-            message: err.message
-          };
-
-          return res.status(400).json({
-            error: error
-          });
+          return this.respondDeletionError(res, err);
         } else {
-          const response = resModel.toObject ? resModel.toObject() : resModel;
-
-          return res.status(200).jsonp(response);
+          return res.status(200).jsonp(resModel.toObject());
         }
       });
     } else {
@@ -154,13 +145,7 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       model.remove((err: any) => {
         /* istanbul ignore if */
         if (err) {
-          const error: IApiError = {
-            id: 'delete',
-            message: err.message
-          };
-          return res.status(400).json({
-            error: error
-          });
+          return this.respondDeletionError(res, err);
         } else {
           return res.status(200).jsonp(model.toObject());
         }

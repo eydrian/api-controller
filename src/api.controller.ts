@@ -58,6 +58,16 @@ abstract class ApiController<T extends Model<Document>> {
       error: error
     });
   }
+  respondDeletionError(res: Response, err: IApiError): Response {
+    const error: IApiError = {
+      id: 'delete',
+      message: err.message
+    };
+
+    return res.status(400).json({
+      error: error
+    });
+  }
   respondValidationError(err: any, res: Response, next: NextFunction): Response | void {
     if (err.name === 'ValidationError') {
       const error: IApiError = {
@@ -86,7 +96,9 @@ abstract class ApiController<T extends Model<Document>> {
     const hasMetaError = req.meta && req.meta.error;
     let status = 200;
     /* istanbul ignore if */
-    if (hasMetaError) { status = 500; }
+    if (hasMetaError) {
+      status = 500;
+    }
 
     return res.status(status).json({ meta: req.meta, data: req.data });
   }
