@@ -25,17 +25,17 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       offset: 0,
       limit: 100
     };
-    req.query.offset = this.parsePagination(req.query.offset, query.offset);
-    req.query.limit = this.parsePagination(req.query.limit, query.limit);
-    if (req.query.sort) { req.query.sort = this.parseSort(req.query.sort); }
-    if (req.query.filter) { req.query = this.parseFilter(req.query); }
+
+    this.processQuery(req, query);
 
     /* istanbul ignore else */
     if (typeof this.model.parseQuery === 'function') {
       query = this.model.parseQuery(req.query);
+    } else {
+      query = this.parseQuery(req.query);
     }
 
-    query.populate = !query.populate ? query.populate : [];
+    query.populate = query.populate ? query.populate : [];
 
     return this.model.find(query.q)
       .limit(toNumber(query.limit))
@@ -58,10 +58,14 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     req: IApiRequest,
     res: Response,
     _next: NextFunction
-  ) {
-    const model = req.model ? req.model.toObject() : {};
+  ): Response {
+    if (this.hasModel(req.model)) {
+      const model = req.model.toObject();
 
-    return res.jsonp(model);
+      return res.jsonp(model);
+    } else {
+      return this.respondModelMissingError(res);
+    }
   }
   create(req: IApiRequest, res: Response, next: NextFunction) {
     delete req.body._id;
@@ -74,6 +78,7 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
         by: req.user.username
       }
     };
+
     model.save((err, resModel) => {
       if (err) {
         return this.respondValidationError(err, res, next);
@@ -272,6 +277,16 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
 
     return next();
   }
+  processQuery(req: IApiRequest, defaultQuery: IApiQuery) {
+    req.query.offset = this.parsePagination(req.query.offset, defaultQuery.offset);
+    req.query.limit = this.parsePagination(req.query.limit, defaultQuery.limit);
+    if (req.query.sort) {
+      req.query.sort = this.parseSort(req.query.sort);
+    }
+    if (req.query.filter) {
+      req.query = this.parseFilter(req.query);
+    }
+  }
   parseSort(sort: string): any {
     const parsedSort: {[key: string]: number} = {};
     try {
@@ -307,11 +322,23 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     return query;
   }
 
-  parsePagination(field: string | number, boundary: string | number) {
-    const value = isString(field) ? parseInt(field, 10) : field;
-    const edge = isString(boundary) ? parseInt(boundary, 10) : boundary;
+  parsePagination(value: string | number, defaultValue: string | number) {
+    const _value = isString(value) ? parseInt(value, 10) : value;
+    const _default = isString(defaultValue) ? parseInt(defaultValue, 10) : defaultValue;
 
-    return isNaN(value) ? edge : value;
+    return isNaN(_value) ? _default : _value;
+  }
+
+
+  parseQuery(query: IApiQuery): IApiQuery {
+    return {
+      q: {},
+      offset: query.offset,
+      limit: query.limit,
+      sort: query.sort,
+      filter: query.filter,
+      populate: query.populate
+    };
   }
 
 }
