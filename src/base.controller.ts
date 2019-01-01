@@ -103,9 +103,7 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
         if (err) {
           return this.respondValidationError(err, res, next);
         } else {
-          const response = resModel.toObject ? resModel.toObject() : resModel;
-
-          return res.status(200).json(response);
+          return res.status(200).json(resModel.toObject());
         }
       });
     } else {
