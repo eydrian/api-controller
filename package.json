@@ -11,7 +11,7 @@
   "scripts": {
     "******************** VERSION *****************************": "",
     "preversion": "npm run lint && npm run test:once && npm run changelog:prepare",
-    "version": "npm run bundle && git add -A bundles && npm run changelog:finalize && npm run changelog:commit",
+    "version": "npm run bundle && git add -A dist && npm run changelog:finalize && npm run changelog:commit",
     "postversion": "git push && git push --tags && git fetch origin",
     "********************** DEVELOPMENT ***********************": "",
     "start": "npm run clear && npm run watch",
