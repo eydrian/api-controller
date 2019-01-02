@@ -3,9 +3,7 @@
 
 # express-api-controller
 
-## this is an api controller for an express api
-
-this is work in progress
+## This is an inheritable api controller for a nodejs express app
 
 ### to install
 ```
