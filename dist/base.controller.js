@@ -134,7 +134,7 @@ class BaseController extends api_controller_1.default {
             }
             this.model.findById(id).populate(populate).exec((err, model) => {
                 if (err) {
-                    return this.respondServerError(res);
+                    return this.respondServerError(res, err);
                 }
                 if (!model) {
                     return this.respondNotFound(id, res, this.model.modelName);
@@ -229,18 +229,25 @@ class BaseController extends api_controller_1.default {
     }
     parseSort(sort) {
         const parsedSort = {};
+        let _sort = {};
         try {
-            const _sort = JSON.parse(sort);
-            Object.keys(_sort).forEach((key) => {
-                parsedSort[key] = parseInt(_sort[key], 10);
-            });
+            _sort = JSON.parse(sort);
         }
         catch (e) {
             if (e.name === 'SyntaxError') {
-                const field = sort;
-                parsedSort[field] = 1;
+                _sort = sort.split(' ')
+                    .filter(s => /^\w+$/.test(s))
+                    .reduce((acc, cur) => {
+                    acc[cur] = 1;
+                    return acc;
+                }, {});
             }
         }
+        Object.keys(_sort).forEach((key) => {
+            const value = _sort[key];
+            parsedSort[key] = helpers_1.isString(value) ? parseInt(value, 10) : value;
+            parsedSort[key] = isNaN(parsedSort[key]) ? 1 : parsedSort[key];
+        });
         return parsedSort;
     }
     parseFilter(query) {
@@ -259,8 +266,8 @@ class BaseController extends api_controller_1.default {
         return query;
     }
     parsePagination(value, defaultValue) {
-        const _value = helpers_1.isString(value) ? parseInt(value, 10) : value;
-        const _default = helpers_1.isString(defaultValue) ? parseInt(defaultValue, 10) : defaultValue;
+        const _value = helpers_1.toNumber(value);
+        const _default = helpers_1.toNumber(defaultValue);
         return isNaN(_value) ? _default : _value;
     }
     parseQuery(query) {

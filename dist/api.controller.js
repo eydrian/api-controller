@@ -6,18 +6,12 @@ class ApiController {
         this.model = model;
     }
     respondServerError(res, error) {
-        const serverError = {
-            id: 'serverError',
-            message: `failed to get ${this.model.modelName}`
-        };
-        return res.status(500).json({
-            error: error || serverError
-        });
+        return res.status(500).json({ error });
     }
     respondNotFound(id, res, modelName) {
         const error = {
             id: 'notFound',
-            message: `${modelName || this.model.modelName} ${id} does not exist`
+            message: `${modelName} ${id} does not exist`
         };
         return res.status(404).json({
             error: error

@@ -7,7 +7,7 @@ import { IApiDocument } from './types/IApiModel';
 declare abstract class ApiController<T extends Model<Document>> {
     protected model: T;
     constructor(model: T);
-    respondServerError(res: Response, error?: any): Response;
+    respondServerError(res: Response, error: any): Response;
     respondNotFound(id: string | number | ObjectID, res: Response, modelName: string): Response;
     respondInvalidId(res: Response): Response;
     respondModelMissingError(res: Response): Response;
