@@ -169,9 +169,8 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       }
 
       this.model.findById(id).populate(populate).exec((err, model) => {
-        /* istanbul ignore if */
         if (err) {
-          return this.respondServerError(res);
+          return this.respondServerError(res, err);
         }
         if (!model) {
           return this.respondNotFound(id, res, this.model.modelName);
