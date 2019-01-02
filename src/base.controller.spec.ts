@@ -375,6 +375,19 @@ describe('base.controller spec', () => {
 
       expect(mockRequest.model).toEqual(_model);
     });
+    it('should respond 500 if error occurs', () => {
+      const id = Types.ObjectId();
+      _model = null;
+      error = {
+        id: 'serverError',
+        message: 'message'
+     };
+
+      controller.findById(mockRequest, mockResponse, mockNext, id);
+
+      expect(mockResponse.statusCode).toBe(500);
+      expect(JSON.parse(mockResponse._getData())).toEqual({ error });
+    });
     it('should return 404 if model not found', () => {
       const id = Types.ObjectId();
       const err = {
@@ -926,7 +939,7 @@ describe('base.controller spec', () => {
       mockModel.countDocuments =
         jest.fn((_query, callback: Function) => callback(error, nrOfDocuments));
     });
-    it('should append meta data to request', () => {
+    it('should append meta data to request with strings', () => {
       const offset = '10';
       const limit = '10';
       mockRequest = createRequest({
@@ -945,13 +958,12 @@ describe('base.controller spec', () => {
       expect(mockRequest.meta.offset).toEqual(parseInt(offset, 10));
       expect(mockRequest.meta.limit).toEqual(parseInt(limit, 10));
     });
-    it('should append meta data to request', () => {
+    it('should append meta data to request with numbers', () => {
       const offset = 10;
       const limit = 10;
       mockRequest = createRequest({
         data: data,
         query: {
-          total: 'query',
           offset: offset,
           limit: limit
         }
