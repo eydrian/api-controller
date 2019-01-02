@@ -1,4 +1,7 @@
-# api-controller
+[![pipeline status](https://git.eydrian.ch/etter/express-api-controller/badges/master/pipeline.svg)](https://git.eydrian.ch/etter/express-api-controller/commits/master)
+[![coverage report](https://git.eydrian.ch/etter/express-api-controller/badges/master/coverage.svg)](https://git.eydrian.ch/etter/express-api-controller/commits/master)
+
+# express-api-controller
 
 ## this is an api controller for an express api
 
