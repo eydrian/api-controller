@@ -977,6 +977,4 @@ describe('base.controller spec', () => {
       expect(mockRequest.meta.limit).toEqual(limit);
     });
   });
-
-
 });

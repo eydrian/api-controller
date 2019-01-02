@@ -14,15 +14,8 @@ abstract class ApiController<T extends Model<Document>> {
   }
 
   // ERROR Responses
-  respondServerError(res: Response, error?: any): Response {
-    const serverError: IApiError = {
-      id: 'serverError',
-      message: `failed to get ${ this.model.modelName }`
-    };
-
-    return res.status(500).json({
-      error: error || serverError
-    });
+  respondServerError(res: Response, error: any): Response {
+    return res.status(500).json({ error });
   }
   respondNotFound(
     id: string | number | ObjectID,
