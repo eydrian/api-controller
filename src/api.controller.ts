@@ -31,7 +31,7 @@ abstract class ApiController<T extends Model<Document>> {
   ): Response {
     const error: IApiError = {
       id: 'notFound',
-      message: `${ modelName || this.model.modelName } ${ id } does not exist`
+      message: `${ modelName } ${ id } does not exist`
     };
 
     return res.status(404).json({
@@ -115,7 +115,7 @@ abstract class ApiController<T extends Model<Document>> {
         req.meta = {
           total: total,
           count: req.data ? req.data.length : /* istanbul ignore next */ 0,
-          offset:  isString(offset) ? parseInt(offset, 10) : offset,
+          offset: isString(offset) ? parseInt(offset, 10) : offset,
           limit: isString(limit) ? parseInt(limit, 10) : limit
         };
 
