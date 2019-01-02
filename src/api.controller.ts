@@ -73,7 +73,6 @@ abstract class ApiController<T extends Model<Document>> {
         error: error
       });
     }
-    /* istanbul ignore else */
     if (err.code === 11000) {
       return res.status(400).json({
         error: {
@@ -88,7 +87,6 @@ abstract class ApiController<T extends Model<Document>> {
   apiResponse(req: IApiRequest, res: Response, _next: NextFunction): Response {
     const hasMetaError = req.meta && req.meta.error;
     let status = 200;
-    /* istanbul ignore if */
     if (hasMetaError) {
       status = 500;
     }
@@ -99,7 +97,6 @@ abstract class ApiController<T extends Model<Document>> {
     const qTotal = req.query.total || {};
 
     this.model.countDocuments(qTotal, (err: any, total: number) => {
-      /* istanbul ignore if */
       if (err) {
         return next(err);
       } else {
@@ -107,7 +104,7 @@ abstract class ApiController<T extends Model<Document>> {
         const limit = req.query.limit;
         req.meta = {
           total: total,
-          count: req.data ? req.data.length : /* istanbul ignore next */ 0,
+          count: req.data ? req.data.length : 0,
           offset: isString(offset) ? parseInt(offset, 10) : offset,
           limit: isString(limit) ? parseInt(limit, 10) : limit
         };

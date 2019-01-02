@@ -73,6 +73,16 @@ describe('base.controller spec', () => {
 
       expect(parsedSort).toEqual({property: -1});
     });
+    it('should parse a sort object with string numbers', () => {
+      const parsedSort = controller.parseSort('{"property": "-1"}');
+
+      expect(parsedSort).toEqual({property: -1});
+    });
+    it('should parse a sort object with invalid numbers', () => {
+      const parsedSort = controller.parseSort('{"property": "sort"}');
+
+      expect(parsedSort).toEqual({property: 1});
+    });
     it('should parse a sort object with multiple params', () => {
       const mockSort = {
         propertyOne: -1,
@@ -86,7 +96,7 @@ describe('base.controller spec', () => {
       const mockSort = '\{"foo: 1';
       const parsedSort = controller.parseSort(mockSort);
 
-      expect(parsedSort).toEqual({ [mockSort]: 1 });
+      expect(parsedSort).toEqual({ '1': 1 });
     });
   });
   describe('parseFilter()', () => {
@@ -433,13 +443,13 @@ describe('base.controller spec', () => {
   describe('"index()"', () => {
     let mockRequest: MockRequest<any>;
     let mockResponse: MockResponse<any>;
-    let err: any = null;
+    let error: any;
     let data: IApiDocument[] = [];
     let query: IApiQuery;
     beforeEach(() => {
       mockResponse = createResponse();
       mockResponse.query = {}; // a mock model to test against;
-      err = null;
+      error = null;
       data = [new mockModel(), new mockModel()];
       query = {
         q: {},
@@ -472,7 +482,7 @@ describe('base.controller spec', () => {
             mockResponse.query.populate = populate;
             return mockFind;
           },
-          exec: (callback: Function) => callback(err, data),
+          exec: (callback: Function) => callback(error, data),
         };
 
         return mockFind;
@@ -524,7 +534,25 @@ describe('base.controller spec', () => {
       controller.index(mockRequest, mockResponse, mockNext);
 
       expect(mockResponse.query.sort).toEqual({type: 1});
-      /* don't check for filter, they are checked above  */
+      /* don't check for filter, they are checked above */
+    });
+    it('should return error, if error occurs', () => {
+      query.sort = 'type';
+      query.filter = 'type';
+      mockRequest = createRequest({
+        query
+      });
+      error = {
+        id: 'mockError',
+        message: 'mockMessage'
+      };
+
+      controller.index(mockRequest, mockResponse, (err) => {
+        expect(err).toEqual(error);
+      });
+
+      expect(mockResponse.query.sort).toEqual({type: 1});
+      /* don't check for filter, they are checked above */
     });
   });
   describe('"read()"', () => {
@@ -875,6 +903,20 @@ describe('base.controller spec', () => {
       expect(JSON.parse(mockResponse._getData())).toEqual({ error });
 
     });
+    it('should return error if error occurs', () => {
+      _model = new mockModel({property: 'something'});
+      mockRequest = createRequest({
+        model: _model
+      });
+      error = {
+        id: 'mockError',
+        message: 'mock message'
+      };
+
+      controller.delete(mockRequest, mockResponse, (err) => {
+        expect(err).toEqual(error);
+      });
+    });
     afterEach(() => {
       delete _model.save;
     });
@@ -955,6 +997,7 @@ describe('base.controller spec', () => {
 
       expect(mockRequest.meta).toBeTruthy();
       expect(mockRequest.meta.total).toEqual(nrOfDocuments);
+      expect(mockRequest.meta.count).toEqual(data.length);
       expect(mockRequest.meta.offset).toEqual(parseInt(offset, 10));
       expect(mockRequest.meta.limit).toEqual(parseInt(limit, 10));
     });
@@ -973,8 +1016,47 @@ describe('base.controller spec', () => {
 
       expect(mockRequest.meta).toBeTruthy();
       expect(mockRequest.meta.total).toEqual(nrOfDocuments);
+      expect(mockRequest.meta.count).toEqual(data.length);
       expect(mockRequest.meta.offset).toEqual(offset);
       expect(mockRequest.meta.limit).toEqual(limit);
     });
+    it('should append meta data even if no data found', () => {
+      const offset = 10;
+      const limit = 10;
+      mockRequest = createRequest({
+        data: null,
+        query: {
+          offset: offset,
+          limit: limit
+        }
+      });
+
+      controller.populateMeta(mockRequest, mockResponse, mockNext);
+
+      expect(mockRequest.meta).toBeTruthy();
+      expect(mockRequest.meta.total).toEqual(nrOfDocuments);
+      expect(mockRequest.meta.count).toEqual(0);
+      expect(mockRequest.meta.offset).toEqual(offset);
+      expect(mockRequest.meta.limit).toEqual(limit);
+    });
+    it('should return next, if error occurs', () => {
+      mockRequest = createRequest({});
+      error = {
+        id: 'mockError',
+        message: 'mockMessage'
+      };
+
+      controller.populateMeta(mockRequest, mockResponse, (err) => {
+        expect(err).toEqual(error);
+      });
+    });
   });
+  describe('"parsePagination()"', () => {
+    it('should also parse pagination on a string value', () => {
+      const mockValue = controller.parsePagination('10', '100');
+
+      expect(mockValue).toBe(10);
+    });
+  });
+
 });

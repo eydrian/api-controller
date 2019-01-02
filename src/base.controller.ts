@@ -27,7 +27,6 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
 
     this.processQuery(req, query);
 
-    /* istanbul ignore else */
     if (typeof this.model.parseQuery === 'function') {
       query = this.model.parseQuery(req.query);
     } else {
@@ -43,7 +42,6 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       .select(query.select)
       .populate(query.populate)
       .exec((err: any, models: T[]) => {
-        /* istanbul ignore if */
         if (err) {
           return next(err);
         } else {
@@ -124,7 +122,6 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
       model.mark.deleted = true;
       model.timestamps.updated.by = req.user.username;
       model.save((err: any, resModel: IApiDocument) => {
-        /* istanbul ignore if */
         if (err) {
           return this.respondDeletionError(res, err);
         } else {
@@ -143,7 +140,6 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     if (this.hasModel(req.model)) {
       const model = req.model;
       model.remove((err: any) => {
-        /* istanbul ignore if */
         if (err) {
           return this.respondDeletionError(res, err);
         } else {
@@ -163,7 +159,6 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
     populate?: IPopulate[]
   ): Response | void {
     if (isValidId(id)) {
-      /* istanbul ignore if */
       if (typeof populate === 'undefined') {
         populate = [];
       }
@@ -273,18 +268,26 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
   }
   parseSort(sort: string): any {
     const parsedSort: {[key: string]: number} = {};
+    let _sort: {[key: string]: string | number} = {};
     try {
-      const _sort: {[key: string]: string} = JSON.parse(sort);
-      Object.keys(_sort).forEach((key) => {
-        parsedSort[key] = parseInt(_sort[key], 10);
-      });
+      _sort = JSON.parse(sort);
+
     } catch (e) {
       /* istanbul ignore next */
       if (e.name === 'SyntaxError') {
-        const field = sort;
-        parsedSort[field] = 1;
+        _sort = sort.split(' ')
+          .filter(s => /^\w+$/.test(s))
+          .reduce((acc: any, cur) => {
+            acc[cur] = 1;
+            return acc;
+          }, {});
       }
     }
+    Object.keys(_sort).forEach((key) => {
+      const value = _sort[key];
+      parsedSort[key] = isString(value) ? parseInt(value, 10) : value;
+      parsedSort[key] = isNaN(parsedSort[key]) ? 1 : parsedSort[key];
+    });
 
     return parsedSort;
   }
@@ -307,8 +310,8 @@ abstract class BaseController<T extends IApiModel> extends ApiController<T> {
   }
 
   parsePagination(value: string | number, defaultValue: string | number) {
-    const _value = isString(value) ? parseInt(value, 10) : value;
-    const _default = isString(defaultValue) ? parseInt(defaultValue, 10) : defaultValue;
+    const _value = toNumber(value);
+    const _default = toNumber(defaultValue);
 
     return isNaN(_value) ? _default : _value;
   }
