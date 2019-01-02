@@ -9,96 +9,121 @@ this is work in progress
 
 ### to install
 ```
-npm install es6-api-controller --save
+npm install express-inheritable-base-controller --save
 ```
 ### usage example
 
 1. include your own isAuthenticated and hasAuthorization hooks
 
-```js
-// controllers/base.controller.server.js
-'use strict';
+```TypeScript
+// controllers/base.controller.server.ts
+import {
+  Response,
+  NextFunction
+} from 'express';
+import {
+  BaseController,
+  IApiModel,
+  IApiRequest
+} from 'es6-api-controller';
 
-const BaseController = require('es6-api-controller').BaseController; // eslint-disable-line
+import {
+  isAuthenticated,
+  hasAuthorization
+} from './users.auth.controller';
 
-const user = require('./users.auth.controller.server');
 
-class MyBaseController extends BaseController {
-  isAuthenticated(req, res, next) {
-    return user.isAuthenticated(req, res, next);
+abstract class MyBaseController<T extends IApiModel> extends BaseController<T> {
+  isAuthenticated(req: IApiRequest, res: Response, next: NextFunction) {
+    return isAuthenticated(req, res, next);
   }
-  hasAuthorization(roles, req, res, next) {
-    return user.hasAuthorization(roles, req, res, next);
+  hasAuthorization(
+    roles: string | string[],
+    req: IApiRequest,
+    res: Response,
+    next: NextFunction
+  ) {
+    return hasAuthorization(roles, req, res, next);
   }
 
 }
 
-module.exports = MyBaseController;
+export default MyBaseController;
 
 ```
 
 2. Inherit MyBaseController in all your express controllers
 
-```js
-// controllers/users.controller.server.js
-'use strict';
+```TypeScript
+import { IApiRequest } from 'es6-api-controller';
+import MyBaseController from './base.controller';
+import { IUserModel } from '../types/user.model.types';
+// controllers/users.controller.server.ts
 
-const BaseController = require('./base.controller.server');
-
-class UsersController extends BaseController {
-
+class UsersController extends MyBaseController<IUserModel> {
+  constructor(model: IUserModel) {
+    super(model);
+    this.filters.push('roles');
+  }
 }
 
-const usersController = new UsersController(require('mongoose').model('User'));
+const usersController = new UsersController(User);
 
-module.exports = usersController;
+export default usersController;
 ```
 
 3. setup your routes in the following way
 
-```js
-'use strict';
+```TypeScript
+import {
+  Router
+} from 'express';
+import {
+  signin,
+  signup,
+  signout
+} from '../controllers/users.auth.controller';
 
-const router = require('express').Router();
-const users = require('../controllers/users.controller.server');
+import usersController from '../controllers/users.controller';
 
-const usersAuth = require('../controllers/users.auth.controller.server');
+const userRouter = Router();
 
-router.post('/auth/signin', usersAuth.signin);
-router.post('/auth/signout', usersAuth.signout);
+userRouter.post('/auth/signin', signin);
+userRouter.post('/auth/signup', signup);
+userRouter.post('/auth/signout', signout);
 
-router.use('/users', users.isAuthenticated.bind(users));
-router.route('/users')
+userRouter.use('/users', users.isAuthenticated.bind(users));
+userRouter.route('/users')
 .get(
-  users.hasAuthorization.bind(users, ['admin', 'client']),
-  users.index.bind(users),
-  users.populateMeta.bind(users),
-  users.apiResponse.bind(users)
+  usersController.hasAuthorization.bind(users, ['admin', 'client']),
+  usersController.index.bind(users),
+  usersController.populateMeta.bind(users),
+  usersController.apiResponse.bind(users)
 )
 .post(
-  users.hasAuthorization.bind(users, ['admin']),
-  users.create.bind(users)
+  usersController.hasAuthorization.bind(users, ['admin']),
+  usersController.create.bind(users)
 );
-router.route('/users/self')
-.get(users.self.bind(users))
-.put(users.updateSelf.bind(users));
+userRouter.route('/users/self')
+.get(usersController.self.bind(users))
+.put(usersController.updateSelf.bind(users));
 
-router.route('/users/:userId')
+userRouter.route('/users/:userId')
 .get(
-  users.hasAuthorization.bind(users, ['admin', 'client']),
-  users.read.bind(users)
+  usersController.hasAuthorization.bind(users, ['admin', 'client']),
+  usersController.read.bind(users)
 )
 .put(
-  users.hasAuthorization.bind(users, ['admin']),
-  users.update.bind(users)
+  usersController.hasAuthorization.bind(users, ['admin']),
+  usersController.update.bind(users)
 )
-.delete(users.hasAuthorization.bind(users, 'admin'), users.delete.bind(users));
+.delete(usersController.hasAuthorization.bind(users, 'admin'), users.delete.bind(users));
 
-router.param('userId', users.findById.bind(users));
-module.exports = router;
+userRouter.param('userId', users.findById.bind(users));
+export default userRouter;
 ```
 
-### Post man queries:
+### Query examples
 
 ```
 ?select=data date&sort={"date":1}
