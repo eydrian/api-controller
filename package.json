@@ -1,19 +1,56 @@
 {
-  "name": "es6-api-controller",
-  "version": "1.0.11",
+  "name": "express-inheritable-base-controller",
+  "version": "2.0.0-0",
   "engines": {
     "node": ">=6.9.0"
   },
   "description": "a nodejs api controller",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "******************** VERSION *****************************": "",
+    "preversion": "npm run lint && npm run test:once && npm run changelog:prepare",
+    "version": "npm run bundle && git add -A dist && npm run changelog:finalize && npm run changelog:commit",
+    "postversion": "git push && git push --tags && git fetch origin",
+    "********************** DEVELOPMENT ***********************": "",
+    "start": "npm run clear && npm run watch",
+    "********************** LINT ******************************": "",
+    "lint": "tslint -p src/tsconfig.app.json",
+    "********************** TEST ******************************": "",
+    "jest": "jest",
+    "test": "npm run test:watch",
+    "test:watch": "npm run jest -- --watch",
+    "test:docker": "npm run coverage",
+    "test:once": "npm run jest",
+    "test:verbose": "npm run jest -- --verbose",
+    "********************** COVERAGE **************************": "",
+    "coverage": "npm run jest -- --coverage",
+    "********************** BUDLE *****************************": "",
+    "bundle": "npm run clear && npm run tsc",
+    "********************** TRANSPILE **************************": "",
+    "tsc": "tsc -p src/tsconfig.app.json",
+    "********************** WATCH ******************************": "",
+    "watch": "concurrently -k -p \"[{name}]\" -n \"TypeScript\" -c \"yellow.bold\" \"npm run watch:ts\"",
+    "watch:ts": "npm run tsc -- -w",
+    "********************** CLEAR **********************": "",
+    "clear": "npm run clear:dist",
+    "clear:dist": "find dist -type f \\( -iname '*.js' -o -iname '*.js.map' -o -iname '*.d.ts' -o -iname '*.d.ts.map' \\) -delete",
+    "********************** CHANGELOG **********************": "",
+    "changelog": "npm run changelog:prepare && npm run changelog:finalize",
+    "changelog:prepare": "npm run changelog:insertBlankline && npm run changelog:insertChanges",
+    "changelog:insertChanges": "git log v$npm_package_version..HEAD --oneline | sed 's/.*/* &/' | cat - CHANGELOG.md > temp.md && mv temp.md CHANGELOG.md",
+    "changelog:insertBlankline": "echo \"\" | cat - CHANGELOG.md > temp.md && mv temp.md CHANGELOG.md",
+    "changelog:finalize": "npm run changelog:addVersion && npm run changelog:edit",
+    "changelog:addVersion": "echo \"## $npm_package_version\n\" | cat - CHANGELOG.md > temp.md && mv temp.md CHANGELOG.md",
+    "changelog:edit": "$EDITOR -w CHANGELOG.md",
+    "changelog:commit": "git commit CHANGELOG.md -m 'update change log'"
   },
   "keywords": [
     "node",
     "js"
   ],
-  "author": "Adrian Etter",
+  "author": "Adrian Etter <engineering@adrianetter.com> (https://www.adrianetter.com)",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -24,12 +61,22 @@
   },
   "homepage": "https://github.com/eydrian/api-controller#readme",
   "peerDependencies": {
-    "mongoose": "^4.10.7"
+    "mongoose": "^5.0.0",
+    "express": "^4.16.4"
   },
   "devDependencies": {
-    "eslint-config-econ": "git+ssh://git@econgit.uzh.ch:engineering/eslint-config.git"
+    "@types/express": "^4.16.0",
+    "@types/jest": "^23.3.10",
+    "@types/mongoose": "^5.3.5",
+    "@types/node": "^10.12.18",
+    "jest": "^23.6.0",
+    "node-mocks-http": "^1.7.3",
+    "ts-jest": "^23.10.5",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2"
   },
   "dependencies": {
-    "mongoose": "^4.13.4"
+    "express": "^4.16.4",
+    "mongoose": "^5.4.1"
   }
 }

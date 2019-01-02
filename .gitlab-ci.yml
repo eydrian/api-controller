@@ -1,0 +1,36 @@
+---
+
+image: node:carbon
+
+stages:
+  - test
+
+cache:
+  key: "$CI_COMMIT_REF_NAME"
+  untracked: true
+  paths:
+    - node_modules/
+
+before_script:
+  - ABSOLUTE_PATH=/builds/$CI_PROJECT_PATH
+
+  # Set node loglevel
+  - NPM_CONFIG_LOGLEVEL=warn
+
+  # update npm
+  - npm update npm -g
+
+  # Install project
+  - npm ci
+
+  # rebuild node sass
+  - npm rebuild
+
+test:
+  artifacts:
+    expire_in: 5 days
+    paths: [coverage/]
+
+  stage: test
+  script:
+    - npm run lint && npm run test:docker
