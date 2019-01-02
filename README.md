@@ -1,13 +1,13 @@
 [![pipeline status](https://git.eydrian.ch/etter/express-api-controller/badges/master/pipeline.svg)](https://git.eydrian.ch/etter/express-api-controller/commits/master)
 [![coverage report](https://git.eydrian.ch/etter/express-api-controller/badges/master/coverage.svg)](https://git.eydrian.ch/etter/express-api-controller/commits/master)
 
-# express-api-controller
+# express-base-controller
 
 ## This is an inheritable api controller for a nodejs express app
 
 ### to install
 ```
-npm install express-inheritable-base-controller --save
+npm install express-base-controller --save
 ```
 ### usage example
 
@@ -23,7 +23,7 @@ import {
   BaseController,
   IApiModel,
   IApiRequest
-} from 'es6-api-controller';
+} from 'express-base-controller';
 
 import {
   isAuthenticated,
@@ -53,7 +53,7 @@ export default MyBaseController;
 2. Inherit MyBaseController in all your express controllers
 
 ```TypeScript
-import { IApiRequest } from 'es6-api-controller';
+import { IApiRequest } from 'express-base-controller';
 import MyBaseController from './base.controller';
 import { IUserModel } from '../types/user.model.types';
 // controllers/users.controller.server.ts
